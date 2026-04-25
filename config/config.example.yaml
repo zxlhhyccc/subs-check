@@ -3,11 +3,11 @@ print-progress: true
 
 # 并发线程数（测活阶段使用此值）
 concurrent: 50
+# 流媒体检测并发数（默认等于concurrent）
+media-concurrent: 20
 # 测速并发数（默认等于concurrent）
 # 建议设置较低值，避免并发抢带宽导致测速不准
 speed-concurrent: 20
-# 流媒体检测并发数（默认等于concurrent）
-media-concurrent: 20
 # 检查间隔(分钟)
 # 必须大于0，小于等于0会设置间隔1分钟
 check-interval: 120
@@ -202,6 +202,8 @@ s3-bucket-lookup: "auto"
 
 # 重试次数(获取订阅失败后重试次数)
 sub-urls-retry: 3
+# 订阅下载并发数(控制同时拉取多少个订阅链接)
+sub-urls-concurrent: 20
 # 获取订阅时使用的UA；如果设置random将会使用随机UA获取订阅
 # sub-urls-get-ua: "random"
 sub-urls-get-ua: "clash.meta (https://github.com/beck-8/subs-check)"
@@ -215,6 +217,22 @@ github-proxy: ""
 proxy: ""
 # 符合条件节点数量的占比，低于此值会将订阅链接打印出来，用于排查质量差的订阅
 success-rate: 0
+
+# DNS 配置，支持 udp/tcp/tls/https/quic 协议
+# enable=false 走 mihomo 默认（系统 DNS + 仅 IPv4）；ipv6=true 允许 v6 解析
+# enable=true 三字段可留空，按 proxy-server-nameserver→nameserver→default-nameserver 链回落
+# default-nameserver 用作 bootstrap 必须是纯 IP
+dns:
+  enable: false
+  ipv6: false
+  nameserver:
+    - https://dns.alidns.com/dns-query
+  proxy-server-nameserver:
+    - https://dns.alidns.com/dns-query
+  default-nameserver:
+    - 223.5.5.5
+    - 119.29.29.29
+
 # 远程订阅清单地址；用于集中维护多个订阅链接，避免频繁修改本地文件
 # 支持两种格式：
 # 1) 纯文本：按行分隔，支持 # 注释与空行
@@ -234,8 +252,11 @@ sub-urls:
   # - https://example.com/sub2.txt
   # - https://example.com/sub?token=43fa8f0dc9bb00dcfec2afb21b14378a
   # - https://example.com/sub?token=43fa8f0dc9bb00dcfec2afb21b14378a?flag=clash.meta
+    # 所有时间占位符均支持 ±N 天偏移，例如 {Ymd-1} 表示昨天、{Y-m-d+1} 表示明天
   # - https://raw.githubusercontent.com/example/repo/main/config/{Ymd}.yaml
   # - https://raw.githubusercontent.com/example/repo/main/daily/daily-{Y}-{m}-{d}.yaml
+  # - https://raw.githubusercontent.com/example/repo/main/config/{Ymd-1}.yaml
+  # - https://raw.githubusercontent.com/example/repo/main/daily/daily-{Y-m-d+1}.yaml
   # - https://example.com/sub.txt#我是备注我是备注
   # 打开这个就可以把上次可用的节点再次测一次
   # - "http://127.0.0.1:8199/sub/all.yaml"
